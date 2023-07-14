@@ -26,26 +26,35 @@ while True:
  
     contours, hier = cv.findContours(frame_HSV, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-    lastArea = 0
-
+    lastWidth = 0
+    elem = None
+    
     if len(contours) > 0 :
-        elem = contours[0]
-        for cont in contours : 
-            if lastArea < cv.contourArea(cont) > 100:
-                lastArea = cv.contourArea(cont)
+        for cont in contours :
+            rect = cv.minAreaRect(cont)
+            width = min([rect[1][0], rect[1][1]])
+
+            if lastWidth < width > 50:
+                lastWidth = width
                 elem = cont
 
-        center, tam, ang = cv.minAreaRect(elem)
-        box = cv.boxPoints([center, tam, ang])
-        box = np.int0(box)
-        cv.drawContours(frame, [box], 0, (0, 0, 255), 2)
-    
-        if tam[0] > tam[1] :
-            midPoint = (round((box[0][0] + box[1][0]) / 2), round((box[0][1] + box[1][1]) / 2))
-        else :
-            midPoint = (round((box[1][0] + box[2][0]) / 2), round((box[1][1] + box[2][1]) / 2))
+        if elem is not None:
 
-        cv.circle(frame, midPoint, 5, (255, 0, 0), -1)
+            rect = cv.minAreaRect(elem)
+            box = cv.boxPoints(rect)
+            box = np.int0(box)
+            cv.drawContours(frame, [box], 0, (0, 0, 255), 2)
+    
+            if rect[1][0] > rect[1][1] :
+                midPoint = (round((box[0][0] + box[1][0]) / 2), round((box[0][1] + box[1][1]) / 2))
+            else :
+                midPoint = (round((box[1][0] + box[2][0]) / 2), round((box[1][1] + box[2][1]) / 2))
+
+            cv.circle(frame, midPoint, 5, (255, 0, 0), -1)
+
+            cv.putText(frame, 'AREA: ' + str(rect[1][0] * rect[1][1]), (20,40), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
+            cv.putText(frame, 'WIDTH: ' + str(min([rect[1][0], rect[1][1]])), (20,70), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0))
+
     
     cv.imshow('window_detection', frame)
  
